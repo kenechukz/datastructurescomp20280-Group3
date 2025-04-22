@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/datastructures2025-ferikep.iml" filepath="$PROJECT_DIR$/datastructures2025-ferikep.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/datastructurescomp20280-Group3.iml" filepath="$PROJECT_DIR$/.idea/datastructurescomp20280-Group3.iml" />
     </modules>
   </component>
 </project>
