@@ -45,6 +45,16 @@ public abstract class AbstractSortedMap<K, V> extends AbstractMap<K, V> implemen
 
 	/** Method for comparing a key and an entry's key */
 	protected int compare(K a, Entry<K, V> b) {
+		if (b == null) {
+			// If b is null, we can't access b.getKey()
+			// Typically, null is considered "smaller" than any non-null value
+			return (a == null) ? 0 : 1;
+		}
+		if (a == null) {
+			// If a is null but b isn't, a is considered "smaller"
+			return -1;
+		}
+		// Both are non-null, proceed with normal comparison
 		return comp.compare(a, b.getKey());
 	}
 
@@ -56,6 +66,19 @@ public abstract class AbstractSortedMap<K, V> extends AbstractMap<K, V> implemen
 	/** Method for comparing two keys */
 	protected int compare(K a, K b) {
 		return comp.compare(a, b);
+	}
+
+	protected void checkKey(K key) throws IllegalArgumentException {
+		if (key == null) {
+			throw new IllegalArgumentException("key cannot be null");
+		}
+
+		try {
+			// Try to use the comparator with this key (to check type compatibility)
+			comp.compare(key, key);
+		} catch (ClassCastException e) {
+			throw new IllegalArgumentException("Incompatible key type");
+		}
 	}
 
 }

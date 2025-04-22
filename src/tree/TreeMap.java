@@ -86,6 +86,10 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	/** Utility used when inserting a new entry at a leaf of the tree */
 	private void expandExternal(Position<Entry<K, V>> p, Entry<K, V> entry) {
 		// TODO
+		tree.set(p, entry);
+
+		tree.addLeft(p, null);
+		tree.addRight(p, null);
 	}
 
 	/**
@@ -98,7 +102,15 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	 */
 	private Position<Entry<K, V>> treeSearch(Position<Entry<K, V>> p, K key) {
 		// TODO
-		return null;
+		if(tree.isExternal(p))
+			return p;
+		int comp = compare(key, p.getElement());
+		if(comp == 0)
+			return p;
+		else if (comp < 0)
+			return treeSearch(tree.left(p), key);
+		else
+			return treeSearch(tree.right(p), key);
 	}
 
 	/**
@@ -109,7 +121,10 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	 */
 	protected Position<Entry<K, V>> treeMin(Position<Entry<K, V>> p) {
 		// TODO
-		return null;
+		Position<Entry<K, V>> walk = p;
+		while (tree.isInternal(walk))
+			walk = tree.left(walk);
+		return tree.parent(walk);
 	}
 
 	/**
@@ -120,7 +135,10 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	 */
 	protected Position<Entry<K, V>> treeMax(Position<Entry<K, V>> p) {
 		// TODO
-		return null;
+		Position<Entry<K, V>> walk = p;
+		while (tree.isInternal(walk))
+			walk = tree.right(walk);
+		return tree.parent(walk);
 	}
 
 	/**
@@ -133,7 +151,12 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	@Override
 	public V get(K key) throws IllegalArgumentException, IOException {
 		// TODO
-		return null;
+		checkKey(key);
+		Position<Entry <K,V>> p = treeSearch(tree.root(), key);
+		rebalanceAccess(p);
+		if(tree.isExternal(p))
+			return null;
+		return p.getElement().getValue();
 	}
 
 	/**
@@ -149,8 +172,24 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	@Override
 	public V put(K key, V value) throws IllegalArgumentException, IOException {
 		// TODO
-		return null;
+		checkKey(key);
+		Entry<K,V> newEntry = new MapEntry<>(key, value);
 
+		if (tree.isEmpty()) {
+			tree.addRoot(newEntry);
+			return null;
+		}
+		Position<Entry <K,V>> p = treeSearch(tree.root(), key);
+		if(tree.isExternal(p)){
+			expandExternal(p, newEntry);
+			rebalanceInsert(p);
+			return null;
+		}else{
+			V old = p.getElement().getValue();
+			tree.set(p, newEntry);
+			rebalanceAccess(p);
+			return old;
+		}
 	}
 
 	/**
@@ -164,7 +203,26 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	@Override
 	public V remove(K key) throws IllegalArgumentException, IOException {
 		// TODO
-		return null;
+		checkKey(key);
+		Position<Entry <K,V>> p = treeSearch(tree.root(), key);
+
+		if(tree.isExternal(p)){
+			rebalanceInsert(p);
+			return null;
+		}else{
+			V old = p.getElement().getValue();
+			if(tree.isInternal(tree.left(p)) && tree.isInternal(tree.right(p))) {
+				Position<Entry <K,V>> replacement = treeMax(tree.left(p));
+				tree.set(p, replacement.getElement());
+				p = replacement;
+			}
+			Position<Entry<K,V>> leaf = (tree.isExternal(tree.left(p)) ? tree.left(p) : tree.right(p));
+			Position<Entry<K,V>> sib = tree.sibling(leaf);
+			tree.remove(leaf);
+			tree.remove(p);
+			rebalanceDelete(p);
+			return old;
+		}
 	}
 
 	// additional behaviors of the SortedMap interface
@@ -177,7 +235,8 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	@Override
 	public Entry<K, V> firstEntry() {
 		// TODO
-		return null;
+		if (isEmpty()) return null;
+		return treeMin(tree.root()).getElement();
 	}
 
 	/**
@@ -188,7 +247,8 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	@Override
 	public Entry<K, V> lastEntry() {
 		// TODO
-		return null;
+		if (isEmpty()) return null;
+		return treeMax(tree.root()).getElement();
 	}
 
 	/**
@@ -202,6 +262,26 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	@Override
 	public Entry<K, V> ceilingEntry(K key) throws IllegalArgumentException {
 		// TODO
+		// Check if the key is valid, may throw IllegalArgumentException
+		checkKey(key);
+
+		// Search for the key in the tree
+		Position<Entry<K, V>> p = treeSearch(tree.root(), key);
+
+		// If an exact match is found, return the element immediately
+		if (tree.isInternal(p))
+			return p.getElement();
+
+		// Otherwise, climb upward until we find a node that is a left child of its parent.
+		// In that case, the parent's key is the least key greater than the given key.
+		while (!tree.isRoot(p)) {
+			if (p == tree.left(tree.parent(p)))
+				return tree.parent(p).getElement();
+			else
+				p = tree.parent(p);
+		}
+
+		// If no such parent exists, then there is no key in the tree that is strictly greater.
 		return null;
 	}
 
@@ -216,6 +296,16 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	@Override
 	public Entry<K, V> floorEntry(K key) throws IllegalArgumentException {
 		// TODO
+		checkKey(key);
+		Position<Entry<K, V>> p = treeSearch(tree.root(), key);
+		if(tree.isInternal(p))
+			return p.getElement();
+		while(!tree.isRoot(p)){
+			if(p == tree.right(tree.parent(p)))
+				return tree.parent(p).getElement();
+			else
+				p = tree.parent(p);
+		}
 		return null;
 	}
 
@@ -230,6 +320,17 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	@Override
 	public Entry<K, V> lowerEntry(K key) throws IllegalArgumentException {
 		// TODO
+		checkKey(key); // may throw IllegalArgumentException
+		Position<Entry<K,V>> p = treeSearch(tree.root( ), key);
+		if (tree.isInternal(p) && tree.isInternal(tree.left(p)))
+			return treeMax(tree.left(p)).getElement( ); // this is the predecessor to p
+		// otherwise, we had failed search, or match with no left child
+		while (!tree.isRoot(p)) {
+			if (p == tree.right(tree.parent(p)))
+				return tree.parent(p).getElement( ); // parent has next lesser key
+			else
+				p = tree.parent(p);
+			}
 		return null;
 	}
 
@@ -244,8 +345,23 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	@Override
 	public Entry<K, V> higherEntry(K key) throws IllegalArgumentException {
 		// TODO
-		return null;
+		checkKey(key); // may throw IllegalArgumentException
+		Position<Entry<K,V>> p = treeSearch(tree.root(), key);
 
+		// If a matching node is found and it has a right child,
+		// then the higher entry is the minimal element in the right subtree.
+		if (tree.isInternal(p) && tree.isInternal(tree.right(p)))
+			return treeMin(tree.right(p)).getElement();
+
+		// Otherwise, search upward until we find a node that is a left child
+		// of its parent; then the parent will be the successor.
+		while (!tree.isRoot(p)) {
+			if (p == tree.left(tree.parent(p)))
+				return tree.parent(p).getElement();
+			else
+				p = tree.parent(p);
+		}
+		return null;
 	}
 
 	// Support for iteration
@@ -258,7 +374,10 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	@Override
 	public Iterable<Entry<K, V>> entrySet() {
 		// TODO
-		return null;
+		ArrayList<Entry<K,V>> buffer = new ArrayList<>(size( ));
+		for (Position<Entry<K,V>> p : tree.inorder( ))
+			if (tree.isInternal(p)) buffer.add(p.getElement( ));
+		return buffer;
 	}
 
 
@@ -290,18 +409,33 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	@Override
 	public Iterable<Entry<K, V>> subMap(K fromKey, K toKey) throws IllegalArgumentException {
 		// TODO
-		return null;
+		ArrayList<Entry<K,V>> buffer = new ArrayList<>(size( ));
+		if (compare(fromKey, toKey) < 0) // ensure that fromKey < toKey
+			subMapRecurse(fromKey, toKey, tree.root( ), buffer);
+		return buffer;
 	}
 
 	// utility to fill subMap buffer recursively (while maintaining order)
 	private void subMapRecurse(K fromKey, K toKey, Position<Entry<K, V>> p,
 							   ArrayList<Entry<K, V>> buffer) {
 		// TODO
+		if (tree.isInternal(p))
+			if (compare(p.getElement( ), fromKey) < 0)
+			// p's key is less than fromKey, so any relevant entries are to the right
+		subMapRecurse(fromKey, toKey, tree.right(p), buffer);
+		else {
+			subMapRecurse(fromKey, toKey, tree.left(p), buffer); // first consider left subtree
+			if (compare(p.getElement( ), toKey) < 0) { // p is within range
+				buffer.add(p.getElement( )); // so add it to buffer, and consider
+				subMapRecurse(fromKey, toKey, tree.right(p), buffer); // right subtree as well
+				}
+			}
 	}
 	
 	protected void rotate(Position<Entry<K, V>> p) {
 		tree.rotate(p);
 	}
+
 
 
 

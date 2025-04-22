@@ -27,13 +27,20 @@ public class HeapPriorityQueue<K extends Comparable<K>, V extends Comparable<V> 
 
 	public ArrayList<K> keys() {
 		// TODO
-		return null;
-
+		ArrayList<K> list = new ArrayList<>();
+		for (Entry<K, V> entry : heap) {
+			list.add(entry.getKey());
+		}
+		return list;
 	}
 
 	public ArrayList<V> values() {
 		// TODO
-		return null;
+		ArrayList<V> list = new ArrayList<>();
+		for (Entry<K, V> entry : heap) {
+			list.add(entry.getValue());
+		}
+		return list;
 	}
 	/**
 	 * Creates an empty priority queue based on the natural ordering of its keys.
@@ -66,35 +73,40 @@ public class HeapPriorityQueue<K extends Comparable<K>, V extends Comparable<V> 
 
 	// protected utilities
 	protected int parent(int j) {
-		// TODO
-		return 0;
+		if(j==0 ){
+			return -1;
+		}
+		return (j-1)/2;
 	}
 
 	protected int left(int j) {
 		// TODO
-		return 0;
+		return 2*j+1;
 
 	}
 
 	protected int right(int j) {
 		// TODO
-		return 0;
+		return 2*j+2;
 	}
 
 	protected boolean hasLeft(int j) {
 		// TODO
-		return false;
+		return left(j) < heap.size();
 	}
 
 	protected boolean hasRight(int j) {
 		// TODO
-		return false;
+		return right(j) < heap.size();
 
 	}
 
 	/** Exchanges the entries at indices i and j of the array list. */
 	protected void swap(int i, int j) {
 		// TODO
+		Entry<K, V> temp = heap.get(i);
+		heap.set(i, heap.get(j));
+		heap.set(j, temp);
 	}
 
 	/**
@@ -108,7 +120,14 @@ public class HeapPriorityQueue<K extends Comparable<K>, V extends Comparable<V> 
 		// compare keys of current position j with parent(j)
 		// if heap order satisfied -> done
 		// else bubble up
-
+		while(j>0){
+			int parent = parent(j);
+			if(compare(heap.get(j), heap.get(parent)) >= 0){
+				break;
+			}
+			swap(parent, j);
+			j=parent;
+		}
 	}
 
 	/*
@@ -123,6 +142,7 @@ public class HeapPriorityQueue<K extends Comparable<K>, V extends Comparable<V> 
 		// while not at the bottom tree (leaf)
 		// if key_parent >= key_child stop
 		// find smallest child and swap
+
 	}
 
 	/**
@@ -133,12 +153,31 @@ public class HeapPriorityQueue<K extends Comparable<K>, V extends Comparable<V> 
 		// while not at the bottom tree (leaf)
 		// if key_parent >= key_child stop
 		// find smallest child and swap
+		while(hasLeft(j)) {
+			int leftIndex = left(j);
+			int smallestIndex = leftIndex;
 
+			if(hasRight(j)) {
+				int rightIndex = right(j);
+				if(compare(heap.get(rightIndex), heap.get(smallestIndex)) < 0){
+					smallestIndex = rightIndex;
+				}
+			}
+			if(compare(heap.get(smallestIndex), heap.get(j)) >= 0){
+				break;
+			}
+			swap(j, smallestIndex);
+			j = smallestIndex;
+		}
 	}
 
 	/** Performs a bottom-up construction of the heap in linear time. */
 	protected void heapify() {
 		// TODO
+		int startIndex = parent(heap.size() - 1);
+		for (int j = startIndex; j >= 0; j--) {
+			downheap(j);
+		}
 	}
 
 	// public methods
@@ -174,7 +213,10 @@ public class HeapPriorityQueue<K extends Comparable<K>, V extends Comparable<V> 
 	@Override
 	public Entry<K, V> insert(K key, V value) throws IllegalArgumentException {
 		// TODO
-		return null;
+		Entry<K, V> entry = new PQEntry<>(key, value);
+		heap.add(entry);
+		upheap(heap.size() - 1);  // Restore heap property.
+		return entry;
 	}
 
 	/**
@@ -185,7 +227,15 @@ public class HeapPriorityQueue<K extends Comparable<K>, V extends Comparable<V> 
 	@Override
 	public Entry<K, V> removeMin() {
 		// TODO
-		return null;
+		if (heap.isEmpty())
+			return null;  // Or throw exception
+		Entry<K, V> minEntry = heap.get(0);
+		int lastIndex = heap.size() - 1;
+		swap(0, lastIndex);         // Swap min with the last element.
+		heap.remove(lastIndex);     // removes the min element
+		if (!heap.isEmpty())
+			downheap(0);            // Restore heap property.
+		return minEntry;
 	}
 
 	public String toString() {

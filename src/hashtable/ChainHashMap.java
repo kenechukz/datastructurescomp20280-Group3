@@ -34,18 +34,31 @@ public class ChainHashMap<K extends Comparable<K>, V> extends AbstractHashMap<K,
 	@SuppressWarnings({ "unchecked" })
 	protected void createTable() {
 		// TODO
+		table = new UnsortedTableMap[capacity];
 	}
 
 	@Override
 	public double loadFactor() {
 		// TODO
-		return 0;
+		return n/capacity;
 	}
 
 	@Override
 	public int numCollisions() {
-		// TODO
-		return 0;
+		int collisions = 0;
+
+		for(int i = 0; i < capacity; i++) {
+			// If the bucket exists and has entries
+			if(table[i] != null) {
+				// The number of collisions in this bucket is (size - 1)
+				// since the first entry isn't considered a collision
+				int bucketSize = table[i].size();
+				if(bucketSize > 1) {
+					collisions += (bucketSize - 1);
+				}
+			}
+		}
+		return collisions;
 	}
 	/**
 	 * Returns value associated with key k in bucket with hash value h. If no such
@@ -58,7 +71,10 @@ public class ChainHashMap<K extends Comparable<K>, V> extends AbstractHashMap<K,
 	@Override
 	protected V bucketGet(int h, K k) {
 		// TODO
-		return null;
+		if(table[h] == null) {
+			return null;
+		}
+		return table[h].get(k);
 	}
 
 	/**
@@ -73,7 +89,17 @@ public class ChainHashMap<K extends Comparable<K>, V> extends AbstractHashMap<K,
 	@Override
 	protected V bucketPut(int h, K k, V v) {
 		// TODO
-		return null;
+		if(table[h] == null) {
+			table[h] = new UnsortedTableMap<>();
+		}
+
+		int oldSize = table[h].size();
+		V oldValue = table[h].put(k, v);
+
+		if(table[h].size() > oldSize){
+			n++;
+		}
+		return oldValue;
 	}		
 
 
@@ -88,7 +114,17 @@ public class ChainHashMap<K extends Comparable<K>, V> extends AbstractHashMap<K,
 	@Override
 	protected V bucketRemove(int h, K k) {
 		// TODO
-		return null;
+		if(table[h] == null) {
+			return null;
+		}
+
+		int oldSize = table[h].size();
+		V value = table[h].remove(k);
+
+		if(table[h].size() < oldSize){
+			n--;
+		}
+		return value;
 	}
 
 	/**
@@ -98,8 +134,19 @@ public class ChainHashMap<K extends Comparable<K>, V> extends AbstractHashMap<K,
 	 */
 	@Override
 	public Iterable<Entry<K, V>> entrySet() {
-		// TODO
-		return null;
+		ArrayList<Entry<K, V>> buffer = new ArrayList<>();
+
+		// Iterate through all buckets
+		for (int h = 0; h < capacity; h++) {
+			if (table[h] != null) {
+				// For each bucket, add all its entries to the buffer
+				for (Entry<K, V> entry : table[h].entrySet()) {
+					buffer.add(entry);
+				}
+			}
+		}
+
+		return buffer;
 	}
 	
 	public String toString() {
