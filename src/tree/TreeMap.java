@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V> {
 
 
-	protected BalanceableBinaryTree<K, V> tree = new BalanceableBinaryTree<>();
+	public BalanceableBinaryTree<K, V> tree = new BalanceableBinaryTree<>();
 
 	/** Constructs an empty map using the natural ordering of keys. */
 	public TreeMap() {
