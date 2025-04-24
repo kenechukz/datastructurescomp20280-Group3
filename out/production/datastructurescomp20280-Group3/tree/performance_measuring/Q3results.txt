@@ -107,29 +107,4 @@ PQSort on reverse_sorted_2000.csv: 441us
 PQSort on reverse_sorted_500.csv: 122us
 PQSort on reverse_sorted_5000.csv: 1129us
 
-----Collections.sort----
-Collections.sort on almost_sorted_100.csv: 4737us
-Collections.sort on almost_sorted_10000.csv: 2058us
-Collections.sort on almost_sorted_2000.csv: 397us
-Collections.sort on almost_sorted_500.csv: 206us
-Collections.sort on almost_sorted_5000.csv: 559us
-Collections.sort on random_10000_sample_1.csv: 6421us
-Collections.sort on random_10000_sample_2.csv: 3073us
-Collections.sort on random_10000_sample_3.csv: 2217us
-Collections.sort on random_100_sample_1.csv: 84us
-Collections.sort on random_100_sample_2.csv: 77us
-Collections.sort on random_100_sample_3.csv: 67us
-Collections.sort on random_2000_sample_1.csv: 438us
-Collections.sort on random_2000_sample_2.csv: 405us
-Collections.sort on random_2000_sample_3.csv: 672us
-Collections.sort on random_5000_sample_1.csv: 1162us
-Collections.sort on random_5000_sample_2.csv: 2308us
-Collections.sort on random_5000_sample_3.csv: 2196us
-Collections.sort on random_500_sample_1.csv: 172us
-Collections.sort on random_500_sample_2.csv: 182us
-Collections.sort on random_500_sample_3.csv: 120us
-Collections.sort on reverse_sorted_100.csv: 49us
-Collections.sort on reverse_sorted_10000.csv: 268us
-Collections.sort on reverse_sorted_2000.csv: 79us
-Collections.sort on reverse_sorted_500.csv: 57us
-Collections.sort on reverse_sorted_5000.csv: 161us
+----java.sort----

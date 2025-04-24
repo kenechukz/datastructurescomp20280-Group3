@@ -1,251 +1,199 @@
 package priorityqueue;
 
-/*
- */
-
 import interfaces.Entry;
-//import tree.BinaryTreeTex;
-import tree.LinkedBinaryTree;
-import utils.Timer;
-import utils.Util;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
 
 /**
  * An implementation of a priority queue using an array-based heap.
  */
-
-public class HeapPriorityQueue<K extends Comparable<K>, V extends Comparable<V> > extends AbstractPriorityQueue<K, V> {
+public class HeapPriorityQueue<K extends Comparable<K>, V extends Comparable<V>> extends AbstractPriorityQueue<K, V> {
 
 	protected ArrayList<Entry<K, V>> heap = new ArrayList<>();
 
 	public ArrayList<K> keys() {
 		// TODO
-		ArrayList<K> list = new ArrayList<>();
-		for (Entry<K, V> entry : heap) {
-			list.add(entry.getKey());
-		}
-		return list;
+		return null;
 	}
 
 	public ArrayList<V> values() {
 		// TODO
-		ArrayList<V> list = new ArrayList<>();
-		for (Entry<K, V> entry : heap) {
-			list.add(entry.getValue());
-		}
-		return list;
+		return null;
 	}
-	/**
-	 * Creates an empty priority queue based on the natural ordering of its keys.
-	 */
+
+	// Constructors
 	public HeapPriorityQueue() {
 		super();
 	}
 
-	/**
-	 * Creates an empty priority queue using the given comparator to order keys.
-	 *
-	 * @param comp comparator defining the order of keys in the priority queue
-	 */
 	public HeapPriorityQueue(Comparator<K> comp) {
 		super(comp);
 	}
 
-	/**
-	 * Creates a priority queue initialized with the respective key-value pairs. The
-	 * two arrays given will be paired element-by-element. They are presumed to have
-	 * the same length. (If not, entries will be created only up to the length of
-	 * the shorter of the arrays)
-	 *
-	 * @param keys   an array of the initial keys for the priority queue
-	 * @param values an array of the initial values for the priority queue
-	 */
 	public HeapPriorityQueue(K[] keys, V[] values) {
-		// TODO
+		int n = keys.length;
+		heap = IntStream.range(0, keys.length)
+				.mapToObj(i -> new PQEntry<>(keys[i], values[i]))
+				.collect(Collectors.toCollection(ArrayList::new));
+		for (int i = n / 2 - 1; i >= 0; i--) {
+			heapify(i);
+		}
 	}
 
-	// protected utilities
+	// Utility methods for heap
 	protected int parent(int j) {
-		if(j==0 ){
-			return -1;
-		}
-		return (j-1)/2;
+		return (j - 1) / 2;
 	}
 
 	protected int left(int j) {
-		// TODO
-		return 2*j+1;
-
+		return 2 * j + 1;
 	}
 
 	protected int right(int j) {
-		// TODO
-		return 2*j+2;
+		return 2 * j + 2;
 	}
 
 	protected boolean hasLeft(int j) {
-		// TODO
 		return left(j) < heap.size();
 	}
 
 	protected boolean hasRight(int j) {
-		// TODO
 		return right(j) < heap.size();
-
 	}
 
-	/** Exchanges the entries at indices i and j of the array list. */
+	// Swaps the entries at indices i and j of the array list
 	protected void swap(int i, int j) {
-		// TODO
 		Entry<K, V> temp = heap.get(i);
 		heap.set(i, heap.get(j));
 		heap.set(j, temp);
 	}
 
-	/**
-	 * Moves the entry at index j higher, if necessary, to restore the heap
-	 * property.
-	 */
+	// Moves the entry at index j higher, if necessary, to restore the heap property
 	protected void upheap(int j) {
-		// TODO
-		// keep doing until satisfied
-		// get the parent of j
-		// compare keys of current position j with parent(j)
-		// if heap order satisfied -> done
-		// else bubble up
-		while(j>0){
-			int parent = parent(j);
-			if(compare(heap.get(j), heap.get(parent)) >= 0){
-				break;
-			}
-			swap(parent, j);
-			j=parent;
+		while (j > 0 && heap.get(j).compareTo(heap.get(parent(j))) < 0) {
+			swap(j, parent(j));
+			j = parent(j);
 		}
 	}
 
-	/*
-	heapsort in place
-	 */
-	static<V extends Comparable<V> > void heapsort(V[] arr) {
-		// TODO
-
-	}
-	protected static<V extends Comparable<V> > void downheap(V[] arr, int start, int end) {
-		// TODO
-		// while not at the bottom tree (leaf)
-		// if key_parent >= key_child stop
-		// find smallest child and swap
-
-	}
-
-	/**
-	 * Moves the entry at index j lower, if necessary, to restore the heap property.
-	 */
+	// Moves the entry at index j lower, if necessary, to restore the heap property
 	protected void downheap(int j) {
-		// TODO
-		// while not at the bottom tree (leaf)
-		// if key_parent >= key_child stop
-		// find smallest child and swap
-		while(hasLeft(j)) {
-			int leftIndex = left(j);
-			int smallestIndex = leftIndex;
+		while (hasLeft(j)) {
+			int leftChild = left(j);
+			int rightChild = right(j);
+			int smallerChild = leftChild;
 
-			if(hasRight(j)) {
-				int rightIndex = right(j);
-				if(compare(heap.get(rightIndex), heap.get(smallestIndex)) < 0){
-					smallestIndex = rightIndex;
-				}
+			if (hasRight(j) && heap.get(rightChild).compareTo(heap.get(leftChild)) < 0) {
+				smallerChild = rightChild;
 			}
-			if(compare(heap.get(smallestIndex), heap.get(j)) >= 0){
+
+			if (heap.get(j).compareTo(heap.get(smallerChild)) <= 0) {
 				break;
 			}
-			swap(j, smallestIndex);
-			j = smallestIndex;
+
+			swap(j, smallerChild);
+			j = smallerChild;
 		}
 	}
 
-	/** Performs a bottom-up construction of the heap in linear time. */
-	protected void heapify() {
-		// TODO
-		int startIndex = parent(heap.size() - 1);
-		for (int j = startIndex; j >= 0; j--) {
-			downheap(j);
+	// Bottom-up construction of the heap in linear time
+	protected void heapify(int i) {
+		int min = i;
+		int n = heap.size();
+
+		if (hasLeft(i) && heap.get(left(i)).compareTo(heap.get(i)) < 0) {
+			min = left(i);
+		}
+
+		if (hasRight(i) && heap.get(right(i)).compareTo(heap.get(min)) < 0) {
+			min = right(i);
+		}
+
+		if (min != i) {
+			swap(i, min);
+			heapify(min);
 		}
 	}
 
-	// public methods
+	// Public methods for the priority queue
 
-	/**
-	 * Returns the number of items in the priority queue.
-	 *
-	 * @return number of items
-	 */
 	@Override
 	public int size() {
 		return heap.size();
 	}
 
-	/**
-	 * Returns (but does not remove) an entry with minimal key.
-	 *
-	 * @return entry having a minimal key (or null if empty)
-	 */
 	@Override
 	public Entry<K, V> min() {
-		return heap.get(0);
+		return heap.isEmpty() ? null : heap.get(0);
 	}
 
-	/**
-	 * Inserts a key-value pair and return the entry created.
-	 *
-	 * @param key   the key of the new entry
-	 * @param value the associated value of the new entry
-	 * @return the entry storing the new key-value pair
-	 * @throws IllegalArgumentException if the key is unacceptable for this queue
-	 */
 	@Override
 	public Entry<K, V> insert(K key, V value) throws IllegalArgumentException {
-		// TODO
 		Entry<K, V> entry = new PQEntry<>(key, value);
 		heap.add(entry);
-		upheap(heap.size() - 1);  // Restore heap property.
+		upheap(heap.size() - 1); // Ensure the heap property is maintained
 		return entry;
 	}
 
-	/**
-	 * Removes and returns an entry with minimal key.
-	 *
-	 * @return the removed entry (or null if empty)
-	 */
 	@Override
 	public Entry<K, V> removeMin() {
-		// TODO
-		if (heap.isEmpty())
-			return null;  // Or throw exception
-		Entry<K, V> minEntry = heap.get(0);
-		int lastIndex = heap.size() - 1;
-		swap(0, lastIndex);         // Swap min with the last element.
-		heap.remove(lastIndex);     // removes the min element
-		if (!heap.isEmpty())
-			downheap(0);            // Restore heap property.
-		return minEntry;
+		if (heap.isEmpty()) {
+			return null;
+		}
+		swap(0, heap.size() - 1);  // Move the last element to the root
+		Entry<K, V> min = heap.remove(heap.size() - 1);  // Remove the root
+		downheap(0);  // Restore the heap property
+		return min;
 	}
 
 	public String toString() {
 		return heap.toString();
 	}
 
+	// Heapsort method (in-place sorting)
+	public static <V extends Comparable<V>> void heapsort(V[] arr) {
+		// Convert the array to a heap
+		for (int i = arr.length / 2 - 1; i >= 0; i--) {
+			downheap(arr, i, arr.length);
+		}
 
+		// Extract the elements from the heap one by one and place them in sorted order
+		for (int end = arr.length - 1; end > 0; end--) {
+			// Swap the root (min) with the last element
+			V temp = arr[0];
+			arr[0] = arr[end];
+			arr[end] = temp;
 
-	public static void main(String[] args) {
+			// Restore the heap property for the reduced heap
+			downheap(arr, 0, end);
+		}
 	}
 
+	// Helper method for heapsort
+	protected static <V extends Comparable<V>> void downheap(V[] arr, int start, int end) {
+		int root = start;
+		while (root * 2 + 1 < end) { // While the left child exists
+			int leftChild = root * 2 + 1;
+			int rightChild = root * 2 + 2;
+			int minChild = leftChild;
 
+			// Find the smaller child
+			if (rightChild < end && arr[rightChild].compareTo(arr[leftChild]) < 0) {
+				minChild = rightChild;
+			}
+
+			// If the root is smaller than the smallest child, the heap property is restored
+			if (arr[root].compareTo(arr[minChild]) <= 0) {
+				break;
+			}
+
+			// Swap the root with the smallest child
+			V temp = arr[root];
+			arr[root] = arr[minChild];
+			arr[minChild] = temp;
+
+			root = minChild; // Move the root to the smallest child
+		}
+	}
 }

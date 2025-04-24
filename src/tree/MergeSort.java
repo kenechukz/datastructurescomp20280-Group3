@@ -3,14 +3,14 @@ package tree;
 public class MergeSort {
     static final int MaxValue = Integer.MAX_VALUE;
 
-    public static void mergeSort(final int[] A) {
+    public static void mergeSort(final Integer[] A) {
         if(A == null || A.length < 2){
             return;
         }
         mergeSortList(A,0,A.length -1);
     }
 
-    private static void mergeSortList(int[] A, int p, int r) {
+    private static void mergeSortList(Integer[] A, int p, int r) {
         if(p >= r){
             return;
         }
@@ -20,7 +20,7 @@ public class MergeSort {
         mergeList(A,p,q,r);
     }
 
-    private static void mergeList(int[] A, int p, int q, int r) {
+    private static void mergeList(Integer[] A, int p, int q, int r) {
         int n1 = q - p + 1;
         int n2 = r - q;
         int[] left  = new int[n1];

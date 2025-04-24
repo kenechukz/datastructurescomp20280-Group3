@@ -3,7 +3,7 @@ package tree;
 public class QuickSort {
 
     // Main quicksort method
-    public static void quickSort(int[] data, int p, int r) {
+    public static void quickSort(Integer[] data, int p, int r) {
         if (p < r) {
             int q = partition(data, p, r); // Partition the array
             quickSort(data, p, q - 1); // Sort the left subarray
@@ -12,7 +12,7 @@ public class QuickSort {
     }
 
     // Partition method to rearrange elements around a pivot
-    private static int partition(int[] data, int p, int r) {
+    private static int partition(Integer[] data, int p, int r) {
         int pivot = data[r];
         int i = p - 1;
         for (int j = p; j < r; j++) {
