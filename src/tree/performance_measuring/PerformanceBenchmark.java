@@ -11,6 +11,11 @@ import java.util.concurrent.ThreadLocalRandom;
 public class PerformanceBenchmark {
     private static final int WARMUP_RUNS = 5;
     private static final int MEASUREMENT_RUNS = 10;
+    private static final List<String[]> results = new ArrayList<>();
+    private static final String[] HEADERS = {
+            "Structure", "Size", "Pattern",
+            "Insertion(ns)", "Search(ns)", "Delete(ns)", "Traversal(ns)"
+    };
 
     static HashMap<Integer, Integer> generateData(String pattern, int size) {
         HashMap<Integer, Integer> data = new HashMap<>();
