@@ -4,6 +4,8 @@ import interfaces.Entry;
 import interfaces.Map;
 import tree.AVLTreeMap;
 import tree.Treap;
+
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -194,6 +196,17 @@ public class PerformanceBenchmark {
                 testStructure(new TreeMap<>(), data, pattern, size);
             }
         }
+
+        // Write results to CSV
+        try (FileWriter writer = new FileWriter("src\\tree\\performance_measuring\\csv\\benchmark_results.csv")) {
+            // Write headers
+            writer.write(String.join(",", HEADERS) + "\n");
+
+            // Write data
+            for (String[] row : results) {
+                writer.write(String.join(",", row) + "\n");
+            }
+        }
     }
 
     static void testStructure(Map<Integer, Integer> tree, String name,
@@ -203,21 +216,38 @@ public class PerformanceBenchmark {
         // Warmup
         warmup(tree, data);
 
+
+        // Tests
+        long insertionTime = measureInsertion(tree, data);
+        long searchTime = measureSearch(tree, data);
+        long deleteTime = measureDeletion(tree, data);
+        long traversalTime = measureInorderTraversal(tree, data);
+
         // Insertion
-        System.out.println("Single Insertion: " + measureInsertion(tree, data) + " ns");
+        System.out.println("Single Insertion: " + insertionTime + " ns");
 
         // Search (ensure tree is populated)
         
         for (java.util.Map.Entry<Integer, Integer> entry : data.entrySet()) {
             tree.put(entry.getKey(), entry.getValue());
         }
-        System.out.println("Search (random key): " + measureSearch(tree, data) + " ns");
+        System.out.println("Search (random key): " + searchTime + " ns");
 
         // Deletion
-        System.out.println("Delete (random key): " + measureDeletion(tree, data) + " ns");
+        System.out.println("Delete (random key): " + deleteTime + " ns");
 
         // Traversal
-        System.out.println("Inorder Traversal: " + measureInorderTraversal(tree, data) + " ns");
+        System.out.println("Inorder Traversal: " + traversalTime + " ns");
+
+        results.add(new String[]{
+                name,
+                String.valueOf(size),
+                pattern,
+                String.valueOf(insertionTime),
+                String.valueOf(searchTime),
+                String.valueOf(deleteTime),
+                String.valueOf(traversalTime)
+        });
     }
 
     static void testStructure(TreeMap<Integer, Integer> tree,
@@ -230,16 +260,33 @@ public class PerformanceBenchmark {
             tree.putAll(data);
         }
 
+        long insertionTime = measureInsertion(tree, data);
+        long searchTime = measureSearch(tree, data);
+        long deleteTime = measureDeletion(tree, data);
+        long traversalTime = measureInorderTraversal(tree, data);
+
         // Insertion
-        System.out.println("Single Insertion: " + measureInsertion(tree, data) + " ns");
+        System.out.println("Single Insertion: " + insertionTime + " ns");
 
         // Search
-        System.out.println("Search (random key): " + measureSearch(tree, data) + " ns");
+        System.out.println("Search (random key): " + searchTime + " ns");
 
         // Deletion
-        System.out.println("Delete (random key): " + measureDeletion(tree, data) + " ns");
+        System.out.println("Delete (random key): " + deleteTime + " ns");
 
         // Traversal
-        System.out.println("Inorder Traversal: " + measureInorderTraversal(tree, data) + " ns");
+        System.out.println("Inorder Traversal: " + traversalTime + " ns");
+
+        results.add(new String[]{
+                "TreeMap",
+                String.valueOf(size),
+                pattern,
+                String.valueOf(insertionTime),
+                String.valueOf(searchTime),
+                String.valueOf(deleteTime),
+                String.valueOf(traversalTime)
+        });
+
+
     }
 }
