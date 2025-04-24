@@ -39,6 +39,21 @@ public class TreeMap<K extends Comparable<K>, V> extends AbstractSortedMap<K, V>
 	}
 
 	/**
+	 * Remove all entries from this map.
+	 */
+
+
+	public void clear() {
+		// re-initialize the empty tree
+		tree = new BalanceableBinaryTree<>();
+		tree.size = 0;
+		tree.addRoot(null);
+
+	}
+
+
+
+	/**
 	 * Returns the number of entries in the map.
 	 *
 	 * @return number of entries in the map

@@ -1,7 +1,6 @@
 package tree.performance_measuring;
 
 import interfaces.Entry;
-import interfaces.Map;
 import tree.AVLTreeMap;
 import tree.Treap;
 
@@ -21,14 +20,14 @@ public class PerformanceBenchmark {
 
     static HashMap<Integer, Integer> generateData(String pattern, int size) {
         HashMap<Integer, Integer> data = new HashMap<>();
-        Random rand = ThreadLocalRandom.current();
+        List<Integer> keys = new ArrayList<>(size);
 
         switch (pattern) {
             case "random":
-                for (int i = 0; i < size; i++) {
-                    int randInt = rand.nextInt(10000);
-                    data.put(randInt, randInt);
-                }
+                // generate unique keys 0..size-1 randomly
+                for (int i = 0; i < size; i++) keys.add(i);
+                Collections.shuffle(keys);
+                for (int k : keys) data.put(k, k);
                 break;
 
             case "ascending":
@@ -38,38 +37,37 @@ public class PerformanceBenchmark {
                 break;
 
             case "descending":
-                for (int i = size; i > 0; i--) {
+                for (int i = size-1; i >= 0; i--) {
                     data.put(i, i);
                 }
                 break;
 
             case "partial":
-                int sortedCount = (int)(size * 0.7);
-                for (int i = 0; i < sortedCount; i++) {
-                    data.put(i, i);
-                }
-                for (int i = sortedCount; i < size; i++) {
-                    int randInt = rand.nextInt(10000);
-                    data.put(randInt, randInt);
-                }
+                int sortedCount = (int) (size * 0.7);
+                // first sorted part
+                for (int i = 0; i < sortedCount; i++) data.put(i, i);
+                // then random unique keys for the rest
+                for (int i = sortedCount; i < size; i++) keys.add(i);
+                Collections.shuffle(keys);
+                for (int k : keys) data.put(k, k);
                 break;
         }
         return data;
     }
 
-    static void warmup(Map<Integer, Integer> tree, HashMap<Integer, Integer> data) throws IOException {
+    static void warmup(tree.TreeMap<Integer, Integer> tree, HashMap<Integer, Integer> data) throws IOException {
         for (int i = 0; i < WARMUP_RUNS; i++) {
-            
+            tree.clear();
             for (java.util.Map.Entry<Integer, Integer> entry : data.entrySet()) {
                 tree.put(entry.getKey(), entry.getValue());
             }
         }
     }
 
-    static long measureInsertion(Map<Integer, Integer> tree, HashMap<Integer, Integer> data) throws IOException {
+    static long measureInsertion(tree.TreeMap<Integer, Integer> tree, HashMap<Integer, Integer> data) throws IOException {
         long total = 0;
         for (int i = 0; i < MEASUREMENT_RUNS; i++) {
-            
+            tree.clear();
             long start = System.nanoTime();
             for (HashMap.Entry<Integer, Integer> entry : data.entrySet()) {
                 tree.put(entry.getKey(), entry.getValue());
@@ -79,10 +77,11 @@ public class PerformanceBenchmark {
         return total / MEASUREMENT_RUNS;
     }
 
+
     static long measureInsertion(TreeMap<Integer, Integer> tree, HashMap<Integer, Integer> data) {
         long total = 0;
         for (int i = 0; i < MEASUREMENT_RUNS; i++) {
-            
+            tree.clear();
             long start = System.nanoTime();
             tree.putAll(data);
             total += System.nanoTime() - start;
@@ -90,10 +89,13 @@ public class PerformanceBenchmark {
         return total / MEASUREMENT_RUNS;
     }
 
-    static long measureSearch(Map<Integer, Integer> tree, HashMap<Integer, Integer> data) throws IOException {
-        Integer[] keys = data.keySet().toArray(new Integer[0]);
+    static long measureSearch(tree.TreeMap<Integer, Integer> tree, HashMap<Integer, Integer> data) throws IOException {
         long total = 0;
+        Integer[] keys = data.keySet().toArray(new Integer[0]);
         for (int i = 0; i < MEASUREMENT_RUNS; i++) {
+            tree.clear();                     // ← clear
+            for (Map.Entry<Integer, Integer> e : data.entrySet())
+                tree.put(e.getKey(), e.getValue());  // ← rebuild
             int key = keys[ThreadLocalRandom.current().nextInt(keys.length)];
             long start = System.nanoTime();
             tree.get(key);
@@ -101,8 +103,11 @@ public class PerformanceBenchmark {
         }
         return total / MEASUREMENT_RUNS;
     }
+
 
     static long measureSearch(TreeMap<Integer, Integer> tree, HashMap<Integer, Integer> data) {
+        tree.clear();
+        tree.putAll(data);
         Integer[] keys = data.keySet().toArray(new Integer[0]);
         long total = 0;
         for (int i = 0; i < MEASUREMENT_RUNS; i++) {
@@ -114,12 +119,12 @@ public class PerformanceBenchmark {
         return total / MEASUREMENT_RUNS;
     }
 
-    static long measureDeletion(Map<Integer, Integer> tree, HashMap<Integer, Integer> data) throws IOException {
+    static long measureDeletion(tree.TreeMap<Integer, Integer> tree, HashMap<Integer, Integer> data) throws IOException {
         Integer[] keys = data.keySet().toArray(new Integer[0]);
         long total = 0;
         for (int i = 0; i < MEASUREMENT_RUNS; i++) {
             // Rebuild tree for each measurement
-            
+            tree.clear();
             for (java.util.Map.Entry<Integer, Integer> entry : data.entrySet()) {
                 tree.put(entry.getKey(), entry.getValue());
             }
@@ -137,7 +142,7 @@ public class PerformanceBenchmark {
         long total = 0;
         for (int i = 0; i < MEASUREMENT_RUNS; i++) {
             // Rebuild tree for each measurement
-            
+            tree.clear();
             tree.putAll(data);
 
             int key = keys[ThreadLocalRandom.current().nextInt(keys.length)];
@@ -148,10 +153,10 @@ public class PerformanceBenchmark {
         return total / MEASUREMENT_RUNS;
     }
 
-    static long measureInorderTraversal(Map<Integer, Integer> tree, HashMap<Integer, Integer> data) throws IOException {
+    static long measureInorderTraversal(tree.TreeMap<Integer, Integer> tree, HashMap<Integer, Integer> data) throws IOException {
         long total = 0;
         for (int i = 0; i < MEASUREMENT_RUNS; i++) {
-            
+            tree.clear();
             for (HashMap.Entry<Integer, Integer> entry : data.entrySet()) {
                 tree.put(entry.getKey(), entry.getValue());
             }
@@ -169,7 +174,7 @@ public class PerformanceBenchmark {
     static long measureInorderTraversal(TreeMap<Integer, Integer> tree, HashMap<Integer, Integer> data) {
         long total = 0;
         for (int i = 0; i < MEASUREMENT_RUNS; i++) {
-            
+            tree.clear();
             tree.putAll(data);
             long start = System.nanoTime();
             tree.forEach((k,v) -> {});
@@ -209,7 +214,7 @@ public class PerformanceBenchmark {
         }
     }
 
-    static void testStructure(Map<Integer, Integer> tree, String name,
+    static void testStructure(tree.TreeMap<Integer, Integer> tree, String name,
                               HashMap<Integer, Integer> data, String pattern, int size) throws IOException {
         System.out.printf("\nTesting %s (n=%d, %s)\n", name, size, pattern);
 
@@ -256,9 +261,10 @@ public class PerformanceBenchmark {
 
         // Warmup
         for (int i = 0; i < WARMUP_RUNS; i++) {
-            
+            tree.clear();
             tree.putAll(data);
         }
+
 
         long insertionTime = measureInsertion(tree, data);
         long searchTime = measureSearch(tree, data);

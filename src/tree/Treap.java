@@ -21,6 +21,8 @@ public class Treap<K extends Comparable<K>, V> extends TreeMap<K, V> {
         rnd = new Random();
     }
 
+
+
     //generate random priorities for new nodes
     private int randomPriority() {
         return rnd.nextInt();
